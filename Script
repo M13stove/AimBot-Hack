@@ -1,41 +1,42 @@
--- Changed
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "AimBot Hack 👌",
-   Icon = 0,
-   LoadingTitle = "AimBot",
+   Name = "Spectator Hub 👀",
+   Icon = 0, -- No icon
+   LoadingTitle = "Spectator Hub",
    LoadingSubtitle = "by Kanshy_OIO",
    Theme = "Default",
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = true,
+
    ConfigurationSaving = {
       Enabled = true,
       FolderName = nil,
-      FileName = "AimBot"
+      FileName = "SpectatorHub"
    },
+
    Discord = {
       Enabled = false,
       Invite = "noinvitelink",
       RememberJoins = true
    },
+
    KeySystem = false
 })
 
 local MainTab = Window:CreateTab("Home 🏡", nil)
-local MainSection = MainTab:CreateSection("Aimbot Controls")
+local MainSection = MainTab:CreateSection("Spectator Controls")
 
--- Aimbot Logic Variables
-local aimbotEnabled = false
+-- Variables for Spectating
+local spectating = false
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- Function to find the nearest player
 local function getNearestPlayer()
    local nearestPlayer = nil
-   local shortestDistance = math.huge
+   local shortestDistance = math.huge -- Set to a very large number
 
    for _, player in pairs(Players:GetPlayers()) do
       if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
@@ -52,33 +53,40 @@ local function getNearestPlayer()
    return nearestPlayer
 end
 
--- Function to center the camera on the nearest player's head
-local function centerCameraOnNearestPlayer()
-   if not aimbotEnabled then
-      Camera.CameraType = Enum.CameraType.Custom
+-- Function to spectate the nearest player
+local function spectateNearestPlayer()
+   if not spectating then
+      Camera.CameraSubject = LocalPlayer.Character -- Reset camera to the local player
       return
    end
 
    local nearestPlayer = getNearestPlayer()
 
-   if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Head") then
-      local targetHead = nearestPlayer.Character.Head
-      Camera.CameraType = Enum.CameraType.Scriptable
-      Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+   if nearestPlayer and nearestPlayer.Character then
+      Camera.CameraSubject = nearestPlayer.Character -- Set the camera to follow the nearest player
    else
-      Camera.CameraType = Enum.CameraType.Custom
+      Camera.CameraSubject = LocalPlayer.Character -- Reset to the local player if no one is found
    end
 end
 
-RunService.RenderStepped:Connect(centerCameraOnNearestPlayer)
-
--- Toggle Button for Aimbot
+-- Toggle for Spectating
 MainTab:CreateToggle({
-   Name = "Enable Aimbot",
+   Name = "Enable Spectate",
    CurrentValue = false,
    Callback = function(value)
-      aimbotEnabled = value
-      print("Aimbot is now", aimbotEnabled and "Enabled" or "Disabled")
+      spectating = value
+      print("Spectating is now", spectating and "Enabled" or "Disabled")
+      spectateNearestPlayer()
+   end,
+})
+
+-- Button to Stop Spectating and Reset
+MainTab:CreateButton({
+   Name = "Stop Spectating",
+   Callback = function()
+      spectating = false
+      Camera.CameraSubject = LocalPlayer.Character -- Reset camera to the local player
+      print("Spectating stopped")
    end,
 })
 
