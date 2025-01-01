@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "ESP & Wallhack",
+   Name = "ESP & Spectate Hack",
    Icon = 0, -- No icon
-   LoadingTitle = "ESP & Wallhack",
+   LoadingTitle = "ESP & Spectate",
    LoadingSubtitle = "by Kanshy_OIO",
    Theme = "Default",
    DisableRayfieldPrompts = false,
