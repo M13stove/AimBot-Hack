@@ -27,56 +27,71 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("Home 🏡", nil)
 local MainSection = MainTab:CreateSection("Spectator Controls")
 
--- Variables for Spectating
-local spectating = false
+-- Variables
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local playerList = {} -- List of players for spectating
+local currentPlayerIndex = 0 -- Index of the currently spectated player
 
--- Function to find the nearest player
-local function getNearestPlayer()
-   local nearestPlayer = nil
-   local shortestDistance = math.huge -- Set to a very large number
-
+-- Function to refresh the list of players
+local function refreshPlayerList()
+   playerList = {}
    for _, player in pairs(Players:GetPlayers()) do
-      if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-         local playerHead = player.Character.Head
-         local distance = (LocalPlayer.Character.Head.Position - playerHead.Position).Magnitude
-
-         if distance < shortestDistance then
-            shortestDistance = distance
-            nearestPlayer = player
-         end
+      if player ~= LocalPlayer then
+         table.insert(playerList, player)
       end
    end
-
-   return nearestPlayer
 end
 
--- Function to spectate the nearest player
-local function spectateNearestPlayer()
-   if not spectating then
-      Camera.CameraSubject = LocalPlayer.Character -- Reset camera to the local player
-      return
-   end
-
-   local nearestPlayer = getNearestPlayer()
-
-   if nearestPlayer and nearestPlayer.Character then
-      Camera.CameraSubject = nearestPlayer.Character -- Set the camera to follow the nearest player
+-- Function to spectate a player based on the index
+local function spectatePlayer(index)
+   if index > 0 and index <= #playerList then
+      local targetPlayer = playerList[index]
+      if targetPlayer and targetPlayer.Character then
+         Camera.CameraSubject = targetPlayer.Character
+         print("Spectating:", targetPlayer.Name)
+      else
+         Camera.CameraSubject = LocalPlayer.Character
+         print("Player not available, resetting camera.")
+      end
    else
-      Camera.CameraSubject = LocalPlayer.Character -- Reset to the local player if no one is found
+      Camera.CameraSubject = LocalPlayer.Character
+      print("Invalid index, resetting camera.")
    end
 end
 
--- Toggle for Spectating
-MainTab:CreateToggle({
-   Name = "Enable Spectate",
-   CurrentValue = false,
-   Callback = function(value)
-      spectating = value
-      print("Spectating is now", spectating and "Enabled" or "Disabled")
-      spectateNearestPlayer()
+-- Next Player Button
+MainTab:CreateButton({
+   Name = "Next Player ➡️",
+   Callback = function()
+      refreshPlayerList()
+      if #playerList > 0 then
+         currentPlayerIndex = currentPlayerIndex + 1
+         if currentPlayerIndex > #playerList then
+            currentPlayerIndex = 1 -- Loop back to the first player
+         end
+         spectatePlayer(currentPlayerIndex)
+      else
+         print("No players available to spectate.")
+      end
+   end,
+})
+
+-- Previous Player Button
+MainTab:CreateButton({
+   Name = "⬅️ Previous Player",
+   Callback = function()
+      refreshPlayerList()
+      if #playerList > 0 then
+         currentPlayerIndex = currentPlayerIndex - 1
+         if currentPlayerIndex < 1 then
+            currentPlayerIndex = #playerList -- Loop back to the last player
+         end
+         spectatePlayer(currentPlayerIndex)
+      else
+         print("No players available to spectate.")
+      end
    end,
 })
 
