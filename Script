@@ -24,6 +24,7 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
+-- Create Main Tab and Section
 local MainTab = Window:CreateTab("Home 🏡", nil)
 local MainSection = MainTab:CreateSection("Spectator Controls")
 
@@ -65,7 +66,7 @@ local function spectatePlayer(index)
    end
 end
 
--- Next Player Button
+-- Button to spectate the next player
 MainTab:CreateButton({
    Name = "Next Player ➡️",
    Callback = function()
@@ -82,7 +83,7 @@ MainTab:CreateButton({
    end,
 })
 
--- Previous Player Button
+-- Button to spectate the previous player
 MainTab:CreateButton({
    Name = "⬅️ Previous Player",
    Callback = function()
@@ -99,11 +100,13 @@ MainTab:CreateButton({
    end,
 })
 
--- Stop Spectating Button
+-- Stop Spectating Button (Fixed)
 MainTab:CreateButton({
    Name = "Stop Spectating 🛑",
    Callback = function()
-      Camera.CameraSubject = LocalPlayer.Character -- Reset the camera to the local player
+      -- Reset the camera to the local player
+      Camera.CameraSubject = LocalPlayer.Character
+      Camera.CFrame = CFrame.new(LocalPlayer.Character.PrimaryPart.Position + Vector3.new(0, 5, 0)) -- Slightly above the local player to avoid overlap
       print("Stopped spectating. Camera reset to local player.")
       spectating = false
    end,
