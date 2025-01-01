@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Spectator Hub 👀",
+   Name = "ESP & Wallhack",
    Icon = 0, -- No icon
-   LoadingTitle = "Spectator Hub",
+   LoadingTitle = "ESP & Wallhack",
    LoadingSubtitle = "by Kanshy_OIO",
    Theme = "Default",
    DisableRayfieldPrompts = false,
@@ -12,7 +12,7 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = {
       Enabled = true,
       FolderName = nil,
-      FileName = "SpectatorHub"
+      FileName = "ESP_Wallhack"
    },
 
    Discord = {
@@ -24,130 +24,109 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
--- Create Main Tab and Section
-local MainTab = Window:CreateTab("Home 🏡", nil)
-local MainSection = MainTab:CreateSection("Spectator Controls")
+local MainTab = Window:CreateTab("ESP Controls", nil)
+local MainSection = MainTab:CreateSection("ESP Settings")
 
 -- Variables
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local playerList = {} -- List of players for spectating
-local currentPlayerIndex = 0 -- Index of the currently spectated player
-local spectating = false
-local ESPEnabled = false -- Flag for ESP state
-local ESPParts = {} -- Table to hold ESP lines for players
+local ESPEnabled = false
+local ESPParts = {} -- Table to hold ESP parts
+local WallhackEnabled = false
 
--- Function to refresh the list of players
-local function refreshPlayerList()
-   playerList = {}
-   for _, player in pairs(Players:GetPlayers()) do
-      if player ~= LocalPlayer then
-         table.insert(playerList, player)
-      end
-   end
+-- Function to draw a box around a player
+local function drawESPBox(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local rootPart = player.Character.HumanoidRootPart
+        local box = Instance.new("BoxHandleAdornment")
+        box.Size = player.Character.HumanoidRootPart.Size * 1.1 -- Slightly larger to fit the character
+        box.CFrame = rootPart.CFrame
+        box.Adornee = rootPart
+        box.Color3 = Color3.fromRGB(255, 0, 0) -- Red color
+        box.Transparency = 0.5
+        box.Visible = true
+        box.Parent = workspace.CurrentCamera
+
+        table.insert(ESPParts, box)
+    end
 end
 
--- Function to spectate a player based on the index
-local function spectatePlayer(index)
-   if index > 0 and index <= #playerList then
-      local targetPlayer = playerList[index]
-      if targetPlayer and targetPlayer.Character then
-         Camera.CameraSubject = targetPlayer.Character
-         spectating = true
-         -- Draw ESP red line for the spectated player
-         if ESPEnabled then
-            for _, part in pairs(targetPlayer.Character:GetChildren()) do
-               if part:IsA("BasePart") then
-                   local line = Instance.new("Part")
-                   line.Name = "ESPLine"
-                   line.Anchored = true
-                   line.CanCollide = false
-                   line.Size = Vector3.new(0.1, 0.1, (Camera.CFrame.Position - part.Position).Magnitude)
-                   line.Position = (Camera.CFrame.Position + part.Position) / 2
-                   line.Color = Color3.fromRGB(255, 0, 0) -- Red color
-                   line.Material = Enum.Material.SmoothPlastic
-                   line.Parent = workspace
-                   table.insert(ESPParts, line)
-               end
-            end
-         end
-      else
-         Camera.CameraSubject = LocalPlayer.Character
-         spectating = false
-      end
-   else
-      Camera.CameraSubject = LocalPlayer.Character
-      spectating = false
-   end
-end
-
--- Function to clean up ESP lines
-local function clearESP()
-   for _, part in pairs(ESPParts) do
-      part:Destroy()
-   end
-   ESPParts = {}
+-- Function to remove all ESP boxes
+local function removeESP()
+    for _, part in pairs(ESPParts) do
+        part:Destroy()
+    end
+    ESPParts = {}
 end
 
 -- Toggle ESP button
 MainTab:CreateButton({
-   Name = "Toggle ESP 🔴",
+   Name = "Toggle ESP 🟥",
    Callback = function()
       ESPEnabled = not ESPEnabled
       if ESPEnabled then
-         clearESP() -- Clear previous ESP lines
-      end
-   end,
-})
-
--- Button to spectate the next player
-MainTab:CreateButton({
-   Name = "Next Player ➡️",
-   Callback = function()
-      refreshPlayerList()
-      if #playerList > 0 then
-         currentPlayerIndex = currentPlayerIndex + 1
-         if currentPlayerIndex > #playerList then
-            currentPlayerIndex = 1 -- Loop back to the first player
+         for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                drawESPBox(player)
+            end
          end
-         spectatePlayer(currentPlayerIndex)
-         clearESP() -- Clear previous ESP lines
       else
-         print("No players available to spectate.")
+         removeESP()
       end
    end,
 })
 
--- Button to spectate the previous player
+-- Toggle Wallhack button (see through walls)
 MainTab:CreateButton({
-   Name = "⬅️ Previous Player",
+   Name = "Toggle Wallhack 👁️",
    Callback = function()
-      refreshPlayerList()
-      if #playerList > 0 then
-         currentPlayerIndex = currentPlayerIndex - 1
-         if currentPlayerIndex < 1 then
-            currentPlayerIndex = #playerList -- Loop back to the last player
+      WallhackEnabled = not WallhackEnabled
+      if WallhackEnabled then
+         for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+                -- Enable wallhack by setting transparency of body parts to 0 (fully visible)
+                for _, part in pairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false -- Disable collisions to see through them
+                        part.Material = Enum.Material.SmoothPlastic
+                        part.Transparency = 0.3 -- Make parts semi-transparent
+                    end
+                end
+            end
          end
-         spectatePlayer(currentPlayerIndex)
-         clearESP() -- Clear previous ESP lines
       else
-         print("No players available to spectate.")
+         -- Reset transparency for all players to default
+         for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in pairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true -- Enable collisions again
+                        part.Material = Enum.Material.SmoothPlastic
+                        part.Transparency = 0
+                    end
+                end
+            end
+         end
       end
    end,
 })
 
--- Stop Spectating Button
-MainTab:CreateButton({
-   Name = "Stop Spectating 🛑",
-   Callback = function()
-      -- Reset the camera to the local player
-      Camera.CameraSubject = LocalPlayer.Character
-      Camera.CFrame = CFrame.new(LocalPlayer.Character.PrimaryPart.Position + Vector3.new(0, 5, 0)) -- Slightly above the local player to avoid overlap
-      spectating = false
-      clearESP() -- Clear all ESP lines when stopping spectation
-   end,
-})
+-- Continuously update ESP for players as they move
+game:GetService("RunService").RenderStepped:Connect(function()
+   if ESPEnabled then
+      for _, player in pairs(Players:GetPlayers()) do
+         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            for _, part in pairs(ESPParts) do
+               if part.Adornee == rootPart then
+                  part.CFrame = rootPart.CFrame
+               end
+            end
+         end
+      end
+   end
+end)
 
 -- Button to Destroy GUI
 MainTab:CreateButton({
@@ -156,24 +135,3 @@ MainTab:CreateButton({
       Rayfield:Destroy()
    end,
 })
-
--- Continuously update ESP lines for all players when spectating
-game:GetService("RunService").RenderStepped:Connect(function()
-   if spectating and ESPEnabled then
-      -- Update the ESP lines for all players
-      for _, player in pairs(Players:GetPlayers()) do
-         if player.Character and player.Character:FindFirstChild("Head") then
-            for _, part in pairs(player.Character:GetChildren()) do
-               if part:IsA("BasePart") then
-                  -- Find existing ESP line or create a new one
-                  local existingLine = workspace:FindFirstChild("ESPLine")
-                  if existingLine then
-                     existingLine.Position = (Camera.CFrame.Position + part.Position) / 2
-                     existingLine.Size = Vector3.new(0.1, 0.1, (Camera.CFrame.Position - part.Position).Magnitude)
-                  end
-               end
-            end
-         end
-      end
-   end
-end)
