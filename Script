@@ -1,137 +1,140 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "ESP & Spectate Hack",
-   Icon = 0, -- No icon
-   LoadingTitle = "ESP & Spectate",
+   Name = "ESP & Spectating",
+   LoadingTitle = "ESP & Spectating",
    LoadingSubtitle = "by Kanshy_OIO",
    Theme = "Default",
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = true,
-
    ConfigurationSaving = {
       Enabled = true,
       FolderName = nil,
-      FileName = "ESP_Wallhack"
+      FileName = "ESP_Spectating"
    },
-
    Discord = {
-      Enabled = false,
-      Invite = "noinvitelink",
-      RememberJoins = true
+      Enabled = false
    },
-
    KeySystem = false
 })
 
-local MainTab = Window:CreateTab("ESP Controls", nil)
-local MainSection = MainTab:CreateSection("ESP Settings")
-
--- Variables
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+
 local ESPEnabled = false
-local ESPParts = {} -- Table to hold ESP parts
-local WallhackEnabled = false
+local Lines = {} -- Store all red lines
+local CurrentSpectating = nil -- Currently spectating player
 
--- Function to draw a box around a player
-local function drawESPBox(player)
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local rootPart = player.Character.HumanoidRootPart
-        local box = Instance.new("BoxHandleAdornment")
-        box.Size = player.Character.HumanoidRootPart.Size * 1.1 -- Slightly larger to fit the character
-        box.CFrame = rootPart.CFrame
-        box.Adornee = rootPart
-        box.Color3 = Color3.fromRGB(255, 0, 0) -- Red color
-        box.Transparency = 0.5
-        box.Visible = true
-        box.Parent = workspace.CurrentCamera
+-- Function to draw ESP red lines
+local function drawRedLine(player)
+    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local redLine = Instance.new("Beam")
+        local attachmentStart = Instance.new("Attachment", Camera)
+        local attachmentEnd = Instance.new("Attachment", player.Character.HumanoidRootPart)
+        
+        redLine.Attachment0 = attachmentStart
+        redLine.Attachment1 = attachmentEnd
+        redLine.FaceCamera = true
+        redLine.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0)) -- Red line
+        redLine.Width0 = 0.1
+        redLine.Width1 = 0.1
+        redLine.Transparency = NumberSequence.new(0.3) -- Semi-transparent
+        redLine.Parent = Camera
 
-        table.insert(ESPParts, box)
+        Lines[player] = redLine
     end
 end
 
--- Function to remove all ESP boxes
+-- Function to remove all ESP red lines
 local function removeESP()
-    for _, part in pairs(ESPParts) do
-        part:Destroy()
+    for _, line in pairs(Lines) do
+        line:Destroy()
     end
-    ESPParts = {}
+    Lines = {}
 end
 
--- Toggle ESP button
+-- Function to toggle ESP
+local function toggleESP()
+    ESPEnabled = not ESPEnabled
+    if ESPEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            drawRedLine(player)
+        end
+    else
+        removeESP()
+    end
+end
+
+-- Function to start spectating a player
+local function startSpectating(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        CurrentSpectating = player
+        Camera.CameraSubject = player.Character.HumanoidRootPart
+    end
+end
+
+-- Function to stop spectating
+local function stopSpectating()
+    CurrentSpectating = nil
+    Camera.CameraSubject = LocalPlayer.Character.Humanoid
+end
+
+-- Spectating buttons
+local MainTab = Window:CreateTab("Spectating & ESP", nil)
+
 MainTab:CreateButton({
-   Name = "Toggle ESP 🟥",
-   Callback = function()
-      ESPEnabled = not ESPEnabled
-      if ESPEnabled then
-         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                drawESPBox(player)
-            end
-         end
-      else
-         removeESP()
-      end
-   end,
+    Name = "Previous Player",
+    Callback = function()
+        local players = Players:GetPlayers()
+        local index = table.find(players, CurrentSpectating) or 1
+        local prevIndex = index - 1
+        if prevIndex < 1 then
+            prevIndex = #players
+        end
+        startSpectating(players[prevIndex])
+    end
 })
 
--- Toggle Wallhack button (see through walls)
 MainTab:CreateButton({
-   Name = "Toggle Wallhack 👁️",
-   Callback = function()
-      WallhackEnabled = not WallhackEnabled
-      if WallhackEnabled then
-         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-                -- Enable wallhack by setting transparency of body parts to 0 (fully visible)
-                for _, part in pairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false -- Disable collisions to see through them
-                        part.Material = Enum.Material.SmoothPlastic
-                        part.Transparency = 0.3 -- Make parts semi-transparent
-                    end
-                end
-            end
-         end
-      else
-         -- Reset transparency for all players to default
-         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                for _, part in pairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true -- Enable collisions again
-                        part.Material = Enum.Material.SmoothPlastic
-                        part.Transparency = 0
-                    end
-                end
-            end
-         end
-      end
-   end,
+    Name = "Next Player",
+    Callback = function()
+        local players = Players:GetPlayers()
+        local index = table.find(players, CurrentSpectating) or 1
+        local nextIndex = index + 1
+        if nextIndex > #players then
+            nextIndex = 1
+        end
+        startSpectating(players[nextIndex])
+    end
 })
 
--- Continuously update ESP for players as they move
-game:GetService("RunService").RenderStepped:Connect(function()
-   if ESPEnabled then
-      for _, player in pairs(Players:GetPlayers()) do
-         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local rootPart = player.Character.HumanoidRootPart
-            for _, part in pairs(ESPParts) do
-               if part.Adornee == rootPart then
-                  part.CFrame = rootPart.CFrame
-               end
+MainTab:CreateButton({
+    Name = "Stop Spectating",
+    Callback = function()
+        stopSpectating()
+    end
+})
+
+-- ESP button
+MainTab:CreateButton({
+    Name = "Toggle ESP",
+    Callback = function()
+        toggleESP()
+    end
+})
+
+-- Continuously update ESP positions
+RunService.RenderStepped:Connect(function()
+    if ESPEnabled then
+        for player, line in pairs(Lines) do
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                line.Attachment1.Parent = player.Character.HumanoidRootPart
+            else
+                line:Destroy()
+                Lines[player] = nil
             end
-         end
-      end
-   end
+        end
+    end
 end)
-
--- Button to Destroy GUI
-MainTab:CreateButton({
-   Name = "Destroy GUI",
-   Callback = function()
-      Rayfield:Destroy()
-   end,
-})
