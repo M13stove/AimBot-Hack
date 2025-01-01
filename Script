@@ -80,16 +80,6 @@ MainTab:CreateToggle({
    end,
 })
 
--- Button to Stop Spectating and Reset
-MainTab:CreateButton({
-   Name = "Stop Spectating",
-   Callback = function()
-      spectating = false
-      Camera.CameraSubject = LocalPlayer.Character -- Reset camera to the local player
-      print("Spectating stopped")
-   end,
-})
-
 -- Button to Destroy GUI
 MainTab:CreateButton({
    Name = "Destroy GUI",
