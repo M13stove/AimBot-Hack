@@ -54,7 +54,6 @@ local function spectatePlayer(index)
       local targetPlayer = playerList[index]
       if targetPlayer and targetPlayer.Character then
          Camera.CameraSubject = targetPlayer.Character
-         print("Spectating:", targetPlayer.Name)
          spectating = true
          -- Draw ESP red line for the spectated player
          if ESPEnabled then
@@ -75,12 +74,10 @@ local function spectatePlayer(index)
          end
       else
          Camera.CameraSubject = LocalPlayer.Character
-         print("Player not available, resetting camera.")
          spectating = false
       end
    else
       Camera.CameraSubject = LocalPlayer.Character
-      print("Invalid index, resetting camera.")
       spectating = false
    end
 end
@@ -98,7 +95,6 @@ MainTab:CreateButton({
    Name = "Toggle ESP 🔴",
    Callback = function()
       ESPEnabled = not ESPEnabled
-      print("ESP Enabled:", ESPEnabled)
       if ESPEnabled then
          clearESP() -- Clear previous ESP lines
       end
@@ -148,7 +144,6 @@ MainTab:CreateButton({
       -- Reset the camera to the local player
       Camera.CameraSubject = LocalPlayer.Character
       Camera.CFrame = CFrame.new(LocalPlayer.Character.PrimaryPart.Position + Vector3.new(0, 5, 0)) -- Slightly above the local player to avoid overlap
-      print("Stopped spectating. Camera reset to local player.")
       spectating = false
       clearESP() -- Clear all ESP lines when stopping spectation
    end,
