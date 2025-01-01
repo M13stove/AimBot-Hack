@@ -35,6 +35,7 @@ local Camera = workspace.CurrentCamera
 local playerList = {} -- List of players for spectating
 local currentPlayerIndex = 0 -- Index of the currently spectated player
 local spectating = false
+local ESPParts = {} -- Table to hold ESP lines for players
 
 -- Function to refresh the list of players
 local function refreshPlayerList()
@@ -54,6 +55,21 @@ local function spectatePlayer(index)
          Camera.CameraSubject = targetPlayer.Character
          print("Spectating:", targetPlayer.Name)
          spectating = true
+         -- Draw ESP red line for the spectated player
+         for _, part in pairs(targetPlayer.Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                local line = Instance.new("Part")
+                line.Name = "ESPLine"
+                line.Anchored = true
+                line.CanCollide = false
+                line.Size = Vector3.new(0.1, 0.1, (Camera.CFrame.Position - part.Position).Magnitude)
+                line.Position = (Camera.CFrame.Position + part.Position) / 2
+                line.Color = Color3.fromRGB(255, 0, 0) -- Red color
+                line.Material = Enum.Material.SmoothPlastic
+                line.Parent = workspace
+                table.insert(ESPParts, line)
+            end
+         end
       else
          Camera.CameraSubject = LocalPlayer.Character
          print("Player not available, resetting camera.")
@@ -64,6 +80,14 @@ local function spectatePlayer(index)
       print("Invalid index, resetting camera.")
       spectating = false
    end
+end
+
+-- Function to clean up ESP lines
+local function clearESP()
+   for _, part in pairs(ESPParts) do
+      part:Destroy()
+   end
+   ESPParts = {}
 end
 
 -- Button to spectate the next player
@@ -77,6 +101,7 @@ MainTab:CreateButton({
             currentPlayerIndex = 1 -- Loop back to the first player
          end
          spectatePlayer(currentPlayerIndex)
+         clearESP() -- Clear previous ESP lines
       else
          print("No players available to spectate.")
       end
@@ -94,6 +119,7 @@ MainTab:CreateButton({
             currentPlayerIndex = #playerList -- Loop back to the last player
          end
          spectatePlayer(currentPlayerIndex)
+         clearESP() -- Clear previous ESP lines
       else
          print("No players available to spectate.")
       end
@@ -109,6 +135,7 @@ MainTab:CreateButton({
       Camera.CFrame = CFrame.new(LocalPlayer.Character.PrimaryPart.Position + Vector3.new(0, 5, 0)) -- Slightly above the local player to avoid overlap
       print("Stopped spectating. Camera reset to local player.")
       spectating = false
+      clearESP() -- Clear all ESP lines when stopping spectation
    end,
 })
 
@@ -119,3 +146,24 @@ MainTab:CreateButton({
       Rayfield:Destroy()
    end,
 })
+
+-- Continuously update ESP lines for all players when spectating
+game:GetService("RunService").RenderStepped:Connect(function()
+   if spectating then
+      -- Update the ESP lines for all players
+      for _, player in pairs(Players:GetPlayers()) do
+         if player.Character and player.Character:FindFirstChild("Head") then
+            for _, part in pairs(player.Character:GetChildren()) do
+               if part:IsA("BasePart") then
+                  -- Find existing ESP line or create a new one
+                  local existingLine = workspace:FindFirstChild("ESPLine")
+                  if existingLine then
+                     existingLine.Position = (Camera.CFrame.Position + part.Position) / 2
+                     existingLine.Size = Vector3.new(0.1, 0.1, (Camera.CFrame.Position - part.Position).Magnitude)
+                  end
+               end
+            end
+         end
+      end
+   end
+end)
