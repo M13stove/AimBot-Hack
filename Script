@@ -2,52 +2,39 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "AimBot Hack 👌",
-   Icon = 0, -- No icon
+   Icon = 0,
    LoadingTitle = "AimBot",
    LoadingSubtitle = "by Kanshy_OIO",
    Theme = "Default",
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = true,
-
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = nil, 
+      FolderName = nil,
       FileName = "AimBot"
    },
-
    Discord = {
       Enabled = false,
       Invite = "noinvitelink",
       RememberJoins = true
    },
-
    KeySystem = false
 })
 
 local MainTab = Window:CreateTab("Home 🏡", nil)
 local MainSection = MainTab:CreateSection("Aimbot Controls")
 
--- Toggle for Aimbot
+-- Aimbot Logic Variables
 local aimbotEnabled = false
-
-MainTab:CreateToggle({
-   Name = "Enable Aimbot",
-   CurrentValue = false, -- Default state is off
-   Callback = function(value)
-      aimbotEnabled = value
-      print("Aimbot is now", aimbotEnabled and "Enabled" or "Disabled")
-   end,
-})
-
--- Aimbot Logic
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+-- Function to find the nearest player
 local function getNearestPlayer()
    local nearestPlayer = nil
-   local shortestDistance = math.huge -- Set to a very large number
+   local shortestDistance = math.huge
 
    for _, player in pairs(Players:GetPlayers()) do
       if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
@@ -64,9 +51,10 @@ local function getNearestPlayer()
    return nearestPlayer
 end
 
+-- Function to center the camera on the nearest player's head
 local function centerCameraOnNearestPlayer()
    if not aimbotEnabled then
-      Camera.CameraType = Enum.CameraType.Custom -- Reset to default camera
+      Camera.CameraType = Enum.CameraType.Custom
       return
    end
 
@@ -74,8 +62,8 @@ local function centerCameraOnNearestPlayer()
 
    if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Head") then
       local targetHead = nearestPlayer.Character.Head
-      Camera.CameraType = Enum.CameraType.Scriptable -- Allows scripting control of the camera
-      Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position) -- Point camera at the head
+      Camera.CameraType = Enum.CameraType.Scriptable
+      Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
    else
       Camera.CameraType = Enum.CameraType.Custom
    end
@@ -83,7 +71,17 @@ end
 
 RunService.RenderStepped:Connect(centerCameraOnNearestPlayer)
 
--- Destroy GUI Button
+-- Toggle Button for Aimbot
+MainTab:CreateToggle({
+   Name = "Enable Aimbot",
+   CurrentValue = false,
+   Callback = function(value)
+      aimbotEnabled = value
+      print("Aimbot is now", aimbotEnabled and "Enabled" or "Disabled")
+   end,
+})
+
+-- Button to Destroy GUI
 MainTab:CreateButton({
    Name = "Destroy GUI",
    Callback = function()
