@@ -33,6 +33,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local playerList = {} -- List of players for spectating
 local currentPlayerIndex = 0 -- Index of the currently spectated player
+local spectating = false
 
 -- Function to refresh the list of players
 local function refreshPlayerList()
@@ -51,13 +52,16 @@ local function spectatePlayer(index)
       if targetPlayer and targetPlayer.Character then
          Camera.CameraSubject = targetPlayer.Character
          print("Spectating:", targetPlayer.Name)
+         spectating = true
       else
          Camera.CameraSubject = LocalPlayer.Character
          print("Player not available, resetting camera.")
+         spectating = false
       end
    else
       Camera.CameraSubject = LocalPlayer.Character
       print("Invalid index, resetting camera.")
+      spectating = false
    end
 end
 
@@ -92,6 +96,16 @@ MainTab:CreateButton({
       else
          print("No players available to spectate.")
       end
+   end,
+})
+
+-- Stop Spectating Button
+MainTab:CreateButton({
+   Name = "Stop Spectating 🛑",
+   Callback = function()
+      Camera.CameraSubject = LocalPlayer.Character -- Reset the camera to the local player
+      print("Stopped spectating. Camera reset to local player.")
+      spectating = false
    end,
 })
 
