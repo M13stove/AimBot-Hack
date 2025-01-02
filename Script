@@ -2,7 +2,7 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
 
 -- Create Main GUI Window
 local Window = OrionLib:MakeWindow({
-    Name = "Hide & Seek Extreme Helper",
+    Name = "HackerX Hub 👌",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "OrionTest"
