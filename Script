@@ -1,140 +1,45 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-local Window = Rayfield:CreateWindow({
-   Name = "ESP & Spectating",
-   LoadingTitle = "ESP & Spectating",
-   LoadingSubtitle = "by Kanshy_OIO",
-   Theme = "Default",
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = true,
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil,
-      FileName = "ESP_Spectating"
-   },
-   Discord = {
-      Enabled = false
-   },
-   KeySystem = false
+-- Create Main GUI Window
+local Window = OrionLib:MakeWindow({
+    Name = "Hide & Seek Extreme Helper",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest"
 })
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local RunService = game:GetService("RunService")
+-- ESP & Hacks Tab
+local HacksTab = Window:MakeTab({
+    Name = "ESP & Hacks",
+    Icon = nil,
+    PremiumOnly = false
+})
 
-local ESPEnabled = false
-local Lines = {} -- Store all red lines
-local CurrentSpectating = nil -- Currently spectating player
+local HacksSection = HacksTab:AddSection({
+    Name = "Player Features"
+})
 
--- Function to draw ESP red lines
-local function drawRedLine(player)
-    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local redLine = Instance.new("Beam")
-        local attachmentStart = Instance.new("Attachment", Camera)
-        local attachmentEnd = Instance.new("Attachment", player.Character.HumanoidRootPart)
-        
-        redLine.Attachment0 = attachmentStart
-        redLine.Attachment1 = attachmentEnd
-        redLine.FaceCamera = true
-        redLine.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0)) -- Red line
-        redLine.Width0 = 0.1
-        redLine.Width1 = 0.1
-        redLine.Transparency = NumberSequence.new(0.3) -- Semi-transparent
-        redLine.Parent = Camera
-
-        Lines[player] = redLine
-    end
-end
-
--- Function to remove all ESP red lines
-local function removeESP()
-    for _, line in pairs(Lines) do
-        line:Destroy()
-    end
-    Lines = {}
-end
-
--- Function to toggle ESP
-local function toggleESP()
-    ESPEnabled = not ESPEnabled
-    if ESPEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            drawRedLine(player)
-        end
-    else
-        removeESP()
-    end
-end
-
--- Function to start spectating a player
-local function startSpectating(player)
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        CurrentSpectating = player
-        Camera.CameraSubject = player.Character.HumanoidRootPart
-    end
-end
-
--- Function to stop spectating
-local function stopSpectating()
-    CurrentSpectating = nil
-    Camera.CameraSubject = LocalPlayer.Character.Humanoid
-end
-
--- Spectating buttons
-local MainTab = Window:CreateTab("Spectating & ESP", nil)
-
-MainTab:CreateButton({
-    Name = "Previous Player",
+-- Enable ESP
+HacksTab:AddButton({
+    Name = "Enable ESP",
     Callback = function()
-        local players = Players:GetPlayers()
-        local index = table.find(players, CurrentSpectating) or 1
-        local prevIndex = index - 1
-        if prevIndex < 1 then
-            prevIndex = #players
-        end
-        startSpectating(players[prevIndex])
-    end
-})
-
-MainTab:CreateButton({
-    Name = "Next Player",
-    Callback = function()
-        local players = Players:GetPlayers()
-        local index = table.find(players, CurrentSpectating) or 1
-        local nextIndex = index + 1
-        if nextIndex > #players then
-            nextIndex = 1
-        end
-        startSpectating(players[nextIndex])
-    end
-})
-
-MainTab:CreateButton({
-    Name = "Stop Spectating",
-    Callback = function()
-        stopSpectating()
-    end
-})
-
--- ESP button
-MainTab:CreateButton({
-    Name = "Toggle ESP",
-    Callback = function()
-        toggleESP()
-    end
-})
-
--- Continuously update ESP positions
-RunService.RenderStepped:Connect(function()
-    if ESPEnabled then
-        for player, line in pairs(Lines) do
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                line.Attachment1.Parent = player.Character.HumanoidRootPart
-            else
-                line:Destroy()
-                Lines[player] = nil
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local espBox = Instance.new("BoxHandleAdornment")
+                espBox.Adornee = player.Character.HumanoidRootPart
+                espBox.Size = Vector3.new(4, 6, 4)
+                espBox.Color3 = Color3.new(1, 0, 0)
+                espBox.AlwaysOnTop = true
+                espBox.ZIndex = 10
+                espBox.Parent = game.Workspace
             end
         end
+        print("ESP Enabled")
+        OrionLib:MakeNotification({
+            Name = "ESP Enabled",
+            Content = "You can now see all players!",
+            Image = nil,
+            Time = 3
+        })
     end
-end)
+})
