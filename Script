@@ -2,7 +2,7 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
 
 -- Create Main GUI Window
 local Window = OrionLib:MakeWindow({
-    Name = "HackerX Hub 👌",
+    Name = "Hide & Seek Extreme Helper",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "OrionTest"
@@ -43,3 +43,130 @@ HacksTab:AddButton({
         })
     end
 })
+
+-- Disable ESP
+HacksTab:AddButton({
+    Name = "Disable ESP",
+    Callback = function()
+        for _, obj in pairs(game.Workspace:GetChildren()) do
+            if obj:IsA("BoxHandleAdornment") then
+                obj:Destroy()
+            end
+        end
+        print("ESP Disabled")
+        OrionLib:MakeNotification({
+            Name = "ESP Disabled",
+            Content = "ESP has been turned off.",
+            Image = nil,
+            Time = 3
+        })
+    end
+})
+
+-- Speed Hack Dropdown
+HacksTab:AddDropdown({
+    Name = "Set Speed",
+    Options = {"16 (Normal)", "30", "50", "75", "100"},
+    Default = "16 (Normal)",
+    Callback = function(value)
+        local speed = tonumber(string.match(value, "%d+"))
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
+            print("WalkSpeed set to: " .. speed)
+            OrionLib:MakeNotification({
+                Name = "Speed Changed",
+                Content = "WalkSpeed set to " .. speed .. "!",
+                Image = nil,
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "Error",
+                Content = "Failed to set speed. Character not found!",
+                Image = nil,
+                Time = 3
+            })
+        end
+    end
+})
+
+-- Infinite Jump
+HacksTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(value)
+        if value then
+            print("Infinite Jump Enabled")
+            _G.InfiniteJump = true
+            game:GetService("UserInputService").JumpRequest:Connect(function()
+                if _G.InfiniteJump then
+                    game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+                end
+            end)
+        else
+            print("Infinite Jump Disabled")
+            _G.InfiniteJump = false
+        end
+    end
+})
+
+-- God Mode (Basic Implementation)
+HacksTab:AddButton({
+    Name = "Enable God Mode",
+    Callback = function()
+        local character = game.Players.LocalPlayer.Character
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.Name = "GodHumanoid"
+            local clone = character.GodHumanoid:Clone()
+            clone.Parent = character
+            clone.Name = "Humanoid"
+            character.GodHumanoid:Destroy()
+            game.Workspace.CurrentCamera.CameraSubject = character.Humanoid
+            OrionLib:MakeNotification({
+                Name = "God Mode Enabled",
+                Content = "You are now invincible!",
+                Image = nil,
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "Error",
+                Content = "Failed to enable God Mode. Character not found!",
+                Image = nil,
+                Time = 3
+            })
+        end
+    end
+})
+
+-- About Us Tab
+local AboutTab = Window:MakeTab({
+    Name = "About Us",
+    Icon = nil,
+    PremiumOnly = false
+})
+
+local AboutSection = AboutTab:AddSection({
+    Name = "Credits"
+})
+
+AboutTab:AddParagraph(
+    "By Kanshy_OIO",
+    "Enjoy the GUI!"
+)
+
+-- Help Tab
+local HelpTab = Window:MakeTab({
+    Name = "Help",
+    Icon = nil,
+    PremiumOnly = false
+})
+
+local HelpSection = HelpTab:AddSection({
+    Name = "Troubleshooting"
+})
+
+HelpTab:AddParagraph(
+    "Having Issues?",
+    "If you experience any problems, try rejoining the game or resetting your character."
+)
